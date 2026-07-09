@@ -10,6 +10,10 @@ import Scanner from "./pages/Scanner";
 import Journal from "./pages/Journal";
 import Sentiment from "./pages/Sentiment";
 import Backtest from "./pages/Backtest";
+import MachineLearning from "./pages/MachineLearning";
+import Portfolio from "./pages/Portfolio";
+import Calendars from "./pages/Calendars";
+import AssistantChat from "./components/AssistantChat";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -97,6 +101,31 @@ export default function App() {
           }
         />
         <Route
+          path="/ml"
+          element={
+            <ProtectedRoute>
+              <MachineLearning />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/portfolio"
+          element={
+            <ProtectedRoute>
+              <Portfolio />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/calendars"
+          element={
+            <ProtectedRoute>
+              <Calendars />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/stocks/:symbol"
           element={
             <ProtectedRoute>
@@ -108,6 +137,7 @@ export default function App() {
         {/* Catch All Redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <AssistantChat />
     </BrowserRouter>
   );
 }

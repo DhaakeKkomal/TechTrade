@@ -3,8 +3,8 @@ from typing import Dict, Any
 from app.core.config import settings
 
 class OllamaService:
-    @staticmethod
-    async def generate_technical_summary(symbol: str, analysis_data: Dict[str, Any]) -> str:
+    @classmethod
+    async def generate_technical_summary(cls, symbol: str, analysis_data: Dict[str, Any]) -> str:
         """
         Send formatted technical analysis data to a local Ollama model to generate a summary.
         If Ollama is not running or unreachable, return a simulated technical analysis summary.

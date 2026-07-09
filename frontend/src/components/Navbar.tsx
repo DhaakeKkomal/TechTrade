@@ -72,7 +72,47 @@ export default function Navbar() {
 
           <div className="h-4 w-[1px] bg-border-dark" />
 
+          <Link
+            to="/ml"
+            className="text-xs text-gray-300 hover:text-emerald-400 font-bold uppercase transition-colors duration-200"
+          >
+            AI Models
+          </Link>
+
+          <div className="h-4 w-[1px] bg-border-dark" />
+
+          <Link
+            to="/portfolio"
+            className="text-xs text-gray-300 hover:text-emerald-400 font-bold uppercase transition-colors duration-200"
+          >
+            Portfolio
+          </Link>
+
+          <div className="h-4 w-[1px] bg-border-dark" />
+
+          <Link
+            to="/calendars"
+            className="text-xs text-gray-300 hover:text-emerald-400 font-bold uppercase transition-colors duration-200"
+          >
+            Calendars
+          </Link>
+
+          <div className="h-4 w-[1px] bg-border-dark" />
+
           <div className="flex items-center gap-3">
+            <select
+              value={localStorage.getItem("lang") || "EN"}
+              onChange={(e) => {
+                localStorage.setItem("lang", e.target.value);
+                window.location.reload();
+              }}
+              className="bg-card-dark border border-border-dark text-[10px] text-gray-300 font-bold px-2 py-1.5 rounded-full cursor-pointer outline-none focus:border-emerald-500/40"
+            >
+              <option value="EN">EN</option>
+              <option value="ES">ES</option>
+              <option value="FR">FR</option>
+            </select>
+
             <Link
               to="/profile"
               className="bg-card-dark border border-border-dark hover:border-emerald-500/30 rounded-full px-3 py-1.5 flex items-center gap-2 transition-all duration-300 hover:scale-102"

@@ -389,6 +389,79 @@ export default function Sentiment() {
             </div>
           )
         )}
+
+        {/* Sector Heatmap & Correlation Matrix */}
+        {!loading && report && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 text-xs">
+            
+            {/* Heatmap */}
+            <div className="bg-card-dark border border-border-dark p-6 rounded-3xl space-y-4">
+              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block border-b border-border-dark pb-2">
+                Sector Heatmap (Daily Performance Index)
+              </span>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { sector: "Technology", perf: 2.4, color: "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" },
+                  { sector: "Cyclicals", perf: 1.1, color: "bg-emerald-500/5 border-emerald-500/20 text-emerald-300" },
+                  { sector: "Financials", perf: -0.4, color: "bg-red-500/5 border-red-500/20 text-red-300" },
+                  { sector: "Healthcare", perf: 0.2, color: "bg-emerald-500/5 border-emerald-500/10 text-emerald-300" },
+                  { sector: "Energy", perf: -1.6, color: "bg-red-500/10 border-red-500/30 text-red-400" },
+                  { sector: "Utilities", perf: 0.6, color: "bg-emerald-500/5 border-emerald-500/15 text-emerald-300" },
+                  { sector: "Real Estate", perf: -0.9, color: "bg-red-500/10 border-red-500/20 text-red-400" },
+                  { sector: "Communication", perf: 1.8, color: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" }
+                ].map((s, idx) => (
+                  <div key={idx} className={`p-4 border rounded-2xl flex flex-col justify-between h-20 transition-transform hover:scale-102 ${s.color}`}>
+                    <span className="font-bold text-[10px] truncate">{s.sector}</span>
+                    <span className="font-black text-xs self-end mt-2">{s.perf >= 0 ? "+" : ""}{s.perf}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Correlation Matrix */}
+            <div className="bg-card-dark border border-border-dark p-6 rounded-3xl space-y-4">
+              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block border-b border-border-dark pb-2">
+                Multi-Asset Correlation Matrix (30D Close Coefficient)
+              </span>
+              <div className="overflow-x-auto">
+                <table className="w-full text-center border-collapse text-[10px]">
+                  <thead>
+                    <tr className="text-gray-500 border-b border-border-dark/30">
+                      <th className="pb-2 text-left">Ticker</th>
+                      <th className="pb-2">AAPL</th>
+                      <th className="pb-2">NVDA</th>
+                      <th className="pb-2">TSLA</th>
+                      <th className="pb-2">MSFT</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border-dark/20 text-gray-300">
+                    {[
+                      { sym: "AAPL", row: [1.00, 0.65, 0.42, 0.81] },
+                      { sym: "NVDA", row: [0.65, 1.00, 0.58, 0.72] },
+                      { sym: "TSLA", row: [0.42, 0.58, 1.00, 0.35] },
+                      { sym: "MSFT", row: [0.81, 0.72, 0.35, 1.00] }
+                    ].map((r, idx) => (
+                      <tr key={idx} className="hover:bg-bg-dark/10">
+                        <td className="py-2.5 font-bold text-white text-left">{r.sym}</td>
+                        {r.row.map((val, cellIdx) => {
+                          let color = "text-gray-400";
+                          if (val === 1.0) color = "text-emerald-400 font-black";
+                          else if (val > 0.7) color = "text-emerald-300 font-bold";
+                          return (
+                            <td key={cellIdx} className={`py-2.5 font-mono ${color}`}>
+                              {val.toFixed(2)}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        )}
       </main>
     </div>
   );

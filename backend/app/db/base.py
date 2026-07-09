@@ -3,3 +3,6 @@ from app.db.base_class import Base  # noqa
 from app.models.user import User  # noqa
 from app.models.watchlist import Watchlist, WatchlistItem  # noqa
 from app.models.trade import Trade  # noqa
+from app.models.chat import ChatMessage  # noqa
+from app.models.alert import Alert  # noqa
+from app.models.holding import Holding  # noqa

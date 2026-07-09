@@ -16,6 +16,9 @@ export default function StockDetail() {
   const [patterns, setPatterns] = useState<any[]>([]);
   const [aiSummary, setAiSummary] = useState<string>("");
   const [activeChartTab, setActiveChartTab] = useState<"custom" | "tradingview">("custom");
+  const [optionsChain, setOptionsChain] = useState<any>(null);
+  const [insiders, setInsiders] = useState<any>(null);
+  const [activeEnterpriseTab, setActiveEnterpriseTab] = useState<"indicators" | "options" | "insiders">("indicators");
   
   const [watchlists, setWatchlists] = useState<any[]>([]);
   const [selectedWlId, setSelectedWlId] = useState<string>("");
@@ -29,8 +32,8 @@ export default function StockDetail() {
     setLoading(true);
     setError("");
     try {
-      // Parallel fetches for standard info, history, analysis, watchlists, price action, and patterns
-      const [infoData, historyData, analysisData, wlData, paData, patData] = await Promise.all([
+      // Parallel fetches for standard info, history, analysis, watchlists, price action, patterns, options, and governance
+      const [infoData, historyData, analysisData, wlData, paData, patData, optData, insData] = await Promise.all([
         api.stocks.getInfo(symbol),
         api.stocks.getHistory(symbol, "6mo", "1d"), // Load 6 months of daily data
         api.stocks.getAnalysis(symbol, "1y", "1d"),
@@ -42,7 +45,9 @@ export default function StockDetail() {
         api.stocks.getPatterns(symbol, "6mo", "1d").catch((err) => {
           console.warn("Patterns fetch failed:", err);
           return [];
-        })
+        }),
+        api.enterprise.getOptionsChain(symbol).catch(() => null),
+        api.enterprise.getInsiders(symbol).catch(() => null)
       ]);
 
       setInfo(infoData);
@@ -51,6 +56,8 @@ export default function StockDetail() {
       setWatchlists(wlData);
       setPriceAction(paData);
       setPatterns(patData);
+      setOptionsChain(optData);
+      setInsiders(insData);
       
       if (wlData.length > 0) {
         setSelectedWlId(wlData[0].id.toString());
@@ -242,13 +249,169 @@ export default function StockDetail() {
           </div>
         </div>
 
-        {/* Computed Indicators */}
+        {/* Enterprise Tabs Selector */}
         <div className="space-y-4">
-          <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-emerald-400" />
-            Technical Indicators Dashboard
-          </h2>
-          <IndicatorsSummary analysis={analysis} />
+          <div className="flex border-b border-border-dark gap-6">
+            <button
+              onClick={() => setActiveEnterpriseTab("indicators")}
+              className={`pb-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-all duration-300 cursor-pointer ${
+                activeEnterpriseTab === "indicators"
+                  ? "border-emerald-400 text-emerald-400"
+                  : "border-transparent text-gray-500 hover:text-gray-300"
+              }`}
+            >
+              Technical Indicators Summary
+            </button>
+            <button
+              onClick={() => setActiveEnterpriseTab("options")}
+              className={`pb-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-all duration-300 cursor-pointer ${
+                activeEnterpriseTab === "options"
+                  ? "border-emerald-400 text-emerald-400"
+                  : "border-transparent text-gray-500 hover:text-gray-300"
+              }`}
+            >
+              Options Chain Viewer
+            </button>
+            <button
+              onClick={() => setActiveEnterpriseTab("insiders")}
+              className={`pb-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-all duration-300 cursor-pointer ${
+                activeEnterpriseTab === "insiders"
+                  ? "border-emerald-400 text-emerald-400"
+                  : "border-transparent text-gray-500 hover:text-gray-300"
+              }`}
+            >
+              Insider Transactions & Institutions
+            </button>
+          </div>
+
+          {activeEnterpriseTab === "indicators" && (
+            <IndicatorsSummary analysis={analysis} />
+          )}
+
+          {activeEnterpriseTab === "options" && optionsChain && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-card-dark border border-border-dark p-6 rounded-3xl">
+              <div>
+                <span className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Calls Chain Options (Expiry: {optionsChain.expiry})</span>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-[10px]">
+                    <thead>
+                      <tr className="text-gray-500 border-b border-border-dark/30">
+                        <th className="pb-1.5">Strike</th>
+                        <th className="pb-1.5">Bid</th>
+                        <th className="pb-1.5">Ask</th>
+                        <th className="pb-1.5">Volume</th>
+                        <th className="pb-1.5 text-right">OI</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border-dark/20 text-gray-300">
+                      {optionsChain.calls.map((c: any, i: number) => (
+                        <tr key={i} className="hover:bg-bg-dark/10">
+                          <td className="py-2 font-bold text-white">${c.strike}</td>
+                          <td className="py-2 font-mono">${c.bid.toFixed(2)}</td>
+                          <td className="py-2 font-mono">${c.ask.toFixed(2)}</td>
+                          <td className="py-2 font-mono">{c.volume}</td>
+                          <td className="py-2 text-right font-mono">{c.open_interest}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div>
+                <span className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Puts Chain Options (Expiry: {optionsChain.expiry})</span>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-[10px]">
+                    <thead>
+                      <tr className="text-gray-500 border-b border-border-dark/30">
+                        <th className="pb-1.5">Strike</th>
+                        <th className="pb-1.5">Bid</th>
+                        <th className="pb-1.5">Ask</th>
+                        <th className="pb-1.5">Volume</th>
+                        <th className="pb-1.5 text-right">OI</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border-dark/20 text-gray-300">
+                      {optionsChain.puts.map((p: any, i: number) => (
+                        <tr key={i} className="hover:bg-bg-dark/10">
+                          <td className="py-2 font-bold text-white">${p.strike}</td>
+                          <td className="py-2 font-mono">${p.bid.toFixed(2)}</td>
+                          <td className="py-2 font-mono">${p.ask.toFixed(2)}</td>
+                          <td className="py-2 font-mono">{p.volume}</td>
+                          <td className="py-2 text-right font-mono">{p.open_interest}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeEnterpriseTab === "insiders" && insiders && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-card-dark border border-border-dark p-6 rounded-3xl">
+              <div>
+                <span className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Insider Trades Log</span>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-[10px]">
+                    <thead>
+                      <tr className="text-gray-500 border-b border-border-dark/30">
+                        <th className="pb-1.5">Date</th>
+                        <th className="pb-1.5">Officer / Relationship</th>
+                        <th className="pb-1.5">Type</th>
+                        <th className="pb-1.5">Shares</th>
+                        <th className="pb-1.5 text-right">Value</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border-dark/20 text-gray-300">
+                      {insiders.insider_trades.map((t: any, i: number) => (
+                        <tr key={i} className="hover:bg-bg-dark/10">
+                          <td className="py-2 text-gray-400">{t.date}</td>
+                          <td className="py-2">
+                            <span className="block font-bold text-white">{t.insider}</span>
+                            <span className="block text-[9px] text-gray-500">{t.relationship}</span>
+                          </td>
+                          <td className="py-2">
+                            <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold ${
+                              t.transaction === "BUY" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"
+                            }`}>
+                              {t.transaction}
+                            </span>
+                          </td>
+                          <td className="py-2 font-mono">{t.shares}</td>
+                          <td className="py-2 text-right font-mono text-white">{t.value}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div>
+                <span className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Top Institutional Shareholders</span>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-[10px]">
+                    <thead>
+                      <tr className="text-gray-500 border-b border-border-dark/30">
+                        <th className="pb-1.5">Shareholder Institution</th>
+                        <th className="pb-1.5">Shares Volume</th>
+                        <th className="pb-1.5">Value ($)</th>
+                        <th className="pb-1.5 text-right">Holdings Ratio</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border-dark/20 text-gray-300">
+                      {insiders.institutional_holdings.map((h: any, i: number) => (
+                        <tr key={i} className="hover:bg-bg-dark/10">
+                          <td className="py-2 font-bold text-white">{h.holder}</td>
+                          <td className="py-2 font-mono">{h.shares}</td>
+                          <td className="py-2 font-mono text-gray-400">{h.value}</td>
+                          <td className="py-2 text-right font-bold text-emerald-400">{h.percentage}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Price Action Logs Section */}

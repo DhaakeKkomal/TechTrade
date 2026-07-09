@@ -14,3 +14,6 @@ class User(Base):
     # Relationships
     watchlists = relationship("Watchlist", back_populates="owner", cascade="all, delete-orphan")
     trades = relationship("Trade", back_populates="owner", cascade="all, delete-orphan")
+    chat_messages = relationship("ChatMessage", back_populates="user", cascade="all, delete-orphan")
+    alerts = relationship("Alert", back_populates="user", cascade="all, delete-orphan")
+    holdings = relationship("Holding", back_populates="user", cascade="all, delete-orphan")

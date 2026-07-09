@@ -3,6 +3,7 @@ import Navbar from "../components/Navbar";
 import SearchBar from "../components/SearchBar";
 import WatchlistManager from "../components/WatchlistManager";
 import ScreenshotAnalyzer from "../components/ScreenshotAnalyzer";
+import AlertsManager from "../components/AlertsManager";
 import { useAuthStore } from "../store/authStore";
 import { Sparkles, Calendar, BookOpen } from "lucide-react";
 
@@ -96,6 +97,11 @@ export default function Dashboard() {
         {/* AI Screenshot Analyzer Section */}
         <div>
           <ScreenshotAnalyzer />
+        </div>
+
+        {/* Alerts Manager Section */}
+        <div>
+          <AlertsManager />
         </div>
 
         {/* Educational Disclaimer Footer */}

@@ -260,4 +260,107 @@ export const api = {
       a.remove();
     },
   },
+  ml: {
+    train: async (symbol: string, modelType: string) => {
+      return request<any>("/ml/train", {
+        method: "POST",
+        body: JSON.stringify({ symbol, model_type: modelType }),
+      });
+    },
+    predict: async (symbol: string, modelType: string) => {
+      return request<any>("/ml/predict", {
+        method: "POST",
+        body: JSON.stringify({ symbol, model_type: modelType }),
+      });
+    },
+  },
+  chat: {
+    getHistory: async () => {
+      return request<any[]>("/chat/history");
+    },
+    sendMessageStream: async (content: string, modelType: string, onChunk: (text: string) => void) => {
+      const activeToken = localStorage.getItem("token");
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+      };
+      if (activeToken) {
+        headers["Authorization"] = `Bearer ${activeToken}`;
+      }
+      const response = await fetch(`${API_BASE_URL}/chat/message`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ content, model_type: modelType }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to send message stream");
+      }
+      const reader = response.body?.getReader();
+      if (!reader) return;
+      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        onChunk(chunk);
+      }
+    },
+  },
+  alerts: {
+    list: async () => {
+      return request<any[]>("/alerts");
+    },
+    create: async (data: any) => {
+      return request<any>("/alerts", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    },
+    delete: async (id: number) => {
+      return request<any>(`/alerts/${id}`, {
+        method: "DELETE",
+      });
+    },
+    check: async (symbol: string) => {
+      return request<any>(`/alerts/check?symbol=${symbol}`, {
+        method: "POST",
+      });
+    },
+  },
+  portfolio: {
+    getSummary: async () => {
+      return request<any>("/portfolio");
+    },
+    importJournal: async () => {
+      return request<any>("/portfolio/import-journal", {
+        method: "POST",
+      });
+    },
+    syncWatchlist: async () => {
+      return request<any>("/portfolio/watchlist-sync", {
+        method: "POST",
+      });
+    },
+    getAiReview: async () => {
+      return request<any>("/portfolio/ai-review");
+    },
+  },
+  enterprise: {
+    getCalendars: async () => {
+      return request<any>("/enterprise/calendars");
+    },
+    getOptionsChain: async (symbol: string) => {
+      return request<any>(`/enterprise/options?symbol=${symbol}`);
+    },
+    getInsiders: async (symbol: string) => {
+      return request<any>(`/enterprise/insiders?symbol=${symbol}`);
+    },
+    runOcr: async (filename: string) => {
+      return request<any>(`/enterprise/ocr?filename=${filename}`, {
+        method: "POST",
+      });
+    },
+    getExportUrl: (format: string) => {
+      return `${API_BASE_URL}/enterprise/export?format=${format}`;
+    },
+  },
 };
