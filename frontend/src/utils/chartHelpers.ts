@@ -8,7 +8,7 @@ export interface Candle {
 }
 
 export function calculateSMA(data: Candle[], window: number) {
-  const result = [];
+  const result: { time: string | number; value: number }[] = [];
   for (let i = 0; i < data.length; i++) {
     if (i < window - 1) continue;
     let sum = 0;
@@ -24,7 +24,7 @@ export function calculateSMA(data: Candle[], window: number) {
 }
 
 export function calculateEMA(data: Candle[], window: number) {
-  const result = [];
+  const result: { time: string | number; value: number }[] = [];
   if (data.length === 0) return result;
   
   const k = 2 / (window + 1);
@@ -46,9 +46,9 @@ export function calculateEMA(data: Candle[], window: number) {
 }
 
 export function calculateBollingerBands(data: Candle[], window = 20, numStd = 2) {
-  const upper = [];
-  const middle = [];
-  const lower = [];
+  const upper: { time: string | number; value: number }[] = [];
+  const middle: { time: string | number; value: number }[] = [];
+  const lower: { time: string | number; value: number }[] = [];
   
   for (let i = 0; i < data.length; i++) {
     if (i < window - 1) continue;

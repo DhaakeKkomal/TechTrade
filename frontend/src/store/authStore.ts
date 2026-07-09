@@ -4,7 +4,7 @@ interface User {
   id: number;
   email: string;
   full_name: string;
-  preferences: Record<str, any>;
+  preferences: Record<string, any>;
 }
 
 interface AuthState {

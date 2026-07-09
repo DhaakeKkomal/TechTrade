@@ -72,3 +72,31 @@ def test_trend_and_sr_detection():
     # Check if resistance level 150 (high of 150.5) or nearby is found
     assert any(abs(r - 150.5) / 150.5 < 0.05 for r in analysis["support_resistance"]["resistances"])
 
+
+def test_adx_and_confidence():
+    # Generate 100 periods of constant price
+    constant_price = 100.0
+    dates = pd.date_range(start="2026-01-01", periods=100)
+    df_constant = pd.DataFrame({
+        "Open": [constant_price] * 100,
+        "High": [constant_price] * 100,
+        "Low": [constant_price] * 100,
+        "Close": [constant_price] * 100,
+        "Volume": [1000] * 100
+    }, index=dates)
+
+    analysis = TechnicalIndicators.analyze_all(df_constant)
+    
+    assert "trend" in analysis
+    assert "adx" in analysis["trend"]
+    assert "strength" in analysis["trend"]
+    assert "confidence" in analysis
+    assert "score" in analysis["confidence"]
+    assert "rating" in analysis["confidence"]
+    
+    # Check bounds
+    assert 0 <= analysis["trend"]["adx"] <= 100
+    assert 0 <= analysis["confidence"]["score"] <= 100
+    assert analysis["confidence"]["rating"] in ["Low", "Medium", "High", "Strong"]
+
+

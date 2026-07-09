@@ -1,7 +1,6 @@
-import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
-import { TrendingUp, LogOut, User as UserIcon, Search } from "lucide-react";
+import { TrendingUp, LogOut, User as UserIcon } from "lucide-react";
 
 export default function Navbar() {
   const { user, logout, isAuthenticated } = useAuthStore();
@@ -37,11 +36,24 @@ export default function Navbar() {
 
           <div className="h-4 w-[1px] bg-border-dark hidden md:block" />
 
+          <Link
+            to="/scanner"
+            className="text-xs text-gray-300 hover:text-emerald-400 font-bold uppercase transition-colors duration-200"
+          >
+            Scanner
+          </Link>
+
+          <div className="h-4 w-[1px] bg-border-dark" />
+
           <div className="flex items-center gap-3">
-            <div className="bg-card-dark border border-border-dark rounded-full px-3 py-1.5 flex items-center gap-2">
+            <Link
+              to="/profile"
+              className="bg-card-dark border border-border-dark hover:border-emerald-500/30 rounded-full px-3 py-1.5 flex items-center gap-2 transition-all duration-300 hover:scale-102"
+              title="View Profile Settings"
+            >
               <UserIcon className="w-4 h-4 text-emerald-400" />
               <span className="text-xs text-gray-300 font-medium">{user?.full_name}</span>
-            </div>
+            </Link>
             <button
               onClick={handleLogout}
               className="text-gray-400 hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 p-2 rounded-xl transition-all duration-300"

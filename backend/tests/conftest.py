@@ -12,7 +12,7 @@ from app.main import app
 from app.db.session import get_db
 from app.db.base import Base
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
+SQLALCHEMY_DATABASE_URL = "sqlite://"
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
@@ -26,12 +26,6 @@ def setup_db():
     yield
     # Teardown test tables
     Base.metadata.drop_all(bind=engine)
-    # Remove database file if it exists
-    if os.path.exists("./test.db"):
-        try:
-            os.remove("./test.db")
-        except PermissionError:
-            pass
 
 @pytest.fixture(scope="function")
 def db_session():

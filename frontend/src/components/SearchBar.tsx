@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../services/api";
 import { Search, Loader2 } from "lucide-react";
@@ -46,7 +46,7 @@ export default function SearchBar() {
     return () => clearTimeout(timer);
   }, [query]);
 
-  const handleSelect = (symbol: str) => {
+  const handleSelect = (symbol: string) => {
     setQuery("");
     setIsOpen(false);
     navigate(`/stocks/${symbol}`);

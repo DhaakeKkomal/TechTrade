@@ -1,10 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, File, UploadFile
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any
 from app.api import deps
 from app.services.yfinance_service import YFinanceService
 from app.services.indicators import TechnicalIndicators
 from app.services.ollama_service import OllamaService
+from app.services.price_action import PriceActionAnalyzer
+from app.services.ai_vision import AIVisionService
+from app.services.patterns import ChartPatternDetector
 from app.models.user import User
 
 router = APIRouter()
@@ -80,3 +83,52 @@ async def get_stock_ai_summary(
         raise HTTPException(status_code=400, detail=analysis["error"])
     summary = await OllamaService.generate_technical_summary(symbol, analysis)
     return {"summary": summary}
+
+@router.get("/{symbol}/price-action", response_model=Dict[str, Any])
+def get_stock_price_action(
+    symbol: str,
+    period: str = "1y",
+    interval: str = "1d",
+    current_user: User = Depends(deps.get_current_user)
+):
+    """
+    Retrieve mathematically detected price action swing points, BOS/CHOCH structure events,
+    FVG imbalances, order blocks, supply/demand zones, wicks liquidity sweeps, and candlestick patterns.
+    """
+    df = YFinanceService.get_stock_history(symbol, period, interval)
+    if df.empty:
+        raise HTTPException(status_code=404, detail=f"Stock history not found for symbol: {symbol}")
+    return PriceActionAnalyzer.analyze(df)
+
+@router.post("/analyze-screenshot", response_model=Dict[str, Any])
+async def analyze_screenshot(
+    file: UploadFile = File(...),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """
+    Accept an uploaded stock chart image screenshot and perform visual/rule-based price action analysis,
+    returning an AI summary, bullish factors list, bearish factors list, confidence score, and educational explanations.
+    """
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Uploaded file must be a valid image")
+        
+    image_bytes = await file.read()
+    analysis_result = await AIVisionService.analyze(image_bytes)
+    return analysis_result
+
+@router.get("/{symbol}/patterns", response_model=List[Dict[str, Any]])
+def get_stock_patterns(
+    symbol: str,
+    period: str = "1y",
+    interval: str = "1d",
+    current_user: User = Depends(deps.get_current_user)
+):
+    """
+    Scan the stock price history and retrieve mathematically detected geometric chart patterns
+    (like Triangles, Head & Shoulders, Double/Triple Tops/Bottoms, Channels, Wedges, and Flags).
+    """
+    df = YFinanceService.get_stock_history(symbol, period, interval)
+    if df.empty:
+        raise HTTPException(status_code=404, detail=f"Stock history not found for symbol: {symbol}")
+    return ChartPatternDetector.detect(df)
+

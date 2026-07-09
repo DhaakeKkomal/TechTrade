@@ -5,6 +5,8 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import StockDetail from "./pages/StockDetail";
+import Profile from "./pages/Profile";
+import Scanner from "./pages/Scanner";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -48,6 +50,22 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/scanner"
+          element={
+            <ProtectedRoute>
+              <Scanner />
             </ProtectedRoute>
           }
         />

@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: techtrade_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: techtrade
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    container_name: techtrade_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/techtrade
+      - SECRET_KEY=super-secret-key-change-in-production-1234567890abcdef
+      - ACCESS_TOKEN_EXPIRE_MINUTES=11520 # 8 days
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434 # Point to Ollama running on developer host
+      - OLLAMA_MODEL=mistral
+    depends_on:
+      - db
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # Resolves local host for Ollama connectivity
+
+  frontend:
+    build: ./frontend
+    container_name: techtrade_frontend
+    restart: always
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000/api/v1
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:

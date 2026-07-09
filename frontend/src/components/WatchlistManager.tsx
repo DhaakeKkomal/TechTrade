@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../services/api";
-import { Plus, Trash2, TrendingUp, TrendingDown, Star, Folder } from "lucide-react";
+import { Plus, Trash2, Star, Folder } from "lucide-react";
 
 export default function WatchlistManager() {
   const [watchlists, setWatchlists] = useState<any[]>([]);

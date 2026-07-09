@@ -1,0 +1,11 @@
+- [x] Implement mathematical swing, market structure, breakout, and zone detection in backend/app/services/price_action.py
+- [x] Implement modular AI vision service in backend/app/services/ai_vision.py
+- [x] Add endpoints GET /stocks/{symbol}/price-action and POST /stocks/analyze-screenshot in backend/app/api/stocks.py
+- [x] Update frontend/src/services/api.ts with new endpoints
+- [x] Create ScreenshotAnalyzer component in frontend/src/components/ScreenshotAnalyzer.tsx
+- [x] Add ScreenshotAnalyzer to frontend/src/pages/Dashboard.tsx
+- [x] Update frontend/src/components/StockChart.tsx to overlay markers and price zones on toggle
+- [x] Update frontend/src/pages/StockDetail.tsx to fetch price action details and list detections in a side panel
+- [x] Create unit tests for price action algorithms in backend/tests/test_price_action.py
+- [x] Run backend unit tests and verify the code
+- [x] Document changes in walkthrough.md

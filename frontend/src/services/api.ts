@@ -41,7 +41,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
 export const api = {
   auth: {
-    login: async (email: string, password: str) => {
+    login: async (email: string, password: string) => {
       // Standard OAuth2 form URL encoded request
       const formData = new URLSearchParams();
       formData.append("username", email);
@@ -121,6 +121,42 @@ export const api = {
     },
     getAiSummary: async (symbol: string, period = "1y", interval = "1d") => {
       return request<any>(`/stocks/${symbol}/ai-summary?period=${period}&interval=${interval}`);
+    },
+    getPriceAction: async (symbol: string, period = "1y", interval = "1d") => {
+      return request<any>(`/stocks/${symbol}/price-action?period=${period}&interval=${interval}`);
+    },
+    getPatterns: async (symbol: string, period = "1y", interval = "1d") => {
+      return request<any[]>(`/stocks/${symbol}/patterns?period=${period}&interval=${interval}`);
+    },
+    analyzeScreenshot: async (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      
+      const activeToken = localStorage.getItem("token");
+      const headers: HeadersInit = {};
+      if (activeToken) {
+        headers["Authorization"] = `Bearer ${activeToken}`;
+      }
+      
+      const response = await fetch(`${API_BASE_URL}/stocks/analyze-screenshot`, {
+        method: "POST",
+        headers,
+        body: formData,
+      });
+      
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || "Failed to analyze screenshot");
+      }
+      return data;
+    },
+  },
+  scanner: {
+    runScan: async (config: { universe: string; filters: any[] }) => {
+      return request<any[]>("/scanner/scan", {
+        method: "POST",
+        body: JSON.stringify(config),
+      });
     },
   },
 };

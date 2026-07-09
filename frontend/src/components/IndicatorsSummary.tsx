@@ -1,5 +1,4 @@
-import React from "react";
-import { ArrowUpRight, ArrowDownRight, Activity, TrendingUp, HelpCircle, Layers } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, Activity, TrendingUp, Layers, ShieldCheck } from "lucide-react";
 
 interface IndicatorsSummaryProps {
   analysis: any;
@@ -14,9 +13,8 @@ export default function IndicatorsSummary({ analysis }: IndicatorsSummaryProps) 
     );
   }
 
-  const { rsi, macd, trend, support_resistance, volume_analysis } = analysis;
+  const { rsi, macd, trend, confidence, support_resistance, volume_analysis } = analysis;
 
-  const isRsiAlert = rsi.status !== "Neutral";
   const rsiBadgeColor =
     rsi.status === "Overbought"
       ? "bg-red-500/10 text-red-400 border-red-500/20"
@@ -33,7 +31,7 @@ export default function IndicatorsSummary({ analysis }: IndicatorsSummaryProps) 
     : "text-gray-400";
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
       {/* Trend & Volume Analysis Card */}
       <div className="bg-card-dark border border-border-dark rounded-3xl p-6 flex flex-col justify-between">
         <div>
@@ -169,6 +167,69 @@ export default function IndicatorsSummary({ analysis }: IndicatorsSummaryProps) 
                 ) : (
                   <span className="text-xs text-gray-600">None detected</span>
                 )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Trend Strength & Confidence Card */}
+      <div className="bg-card-dark border border-border-dark rounded-3xl p-6 flex flex-col justify-between">
+        <div>
+          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            AI Trend & Confidence
+          </h3>
+          <div className="space-y-4">
+            <div>
+              <span className="text-xs text-gray-500 block mb-1">Signal Confidence</span>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-base font-bold text-white">{confidence?.score ? confidence.score.toFixed(0) : "50"}%</span>
+                <span
+                  className={`text-[9px] font-bold px-1.5 py-0.5 border rounded-full ${
+                    confidence?.rating === "Strong"
+                      ? "bg-purple-500/10 text-purple-400 border-purple-500/20"
+                      : confidence?.rating === "High"
+                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                      : confidence?.rating === "Medium"
+                      ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                      : "bg-red-500/10 text-red-400 border-red-500/20"
+                  }`}
+                >
+                  {confidence?.rating || "Medium"}
+                </span>
+              </div>
+              <div className="w-full bg-bg-dark border border-border-dark h-1.5 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    (confidence?.score || 50) >= 80
+                      ? "bg-purple-500"
+                      : (confidence?.score || 50) >= 65
+                      ? "bg-emerald-500"
+                      : (confidence?.score || 50) >= 45
+                      ? "bg-amber-500"
+                      : "bg-red-500"
+                  }`}
+                  style={{ width: `${confidence?.score || 50}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="h-[1px] bg-border-dark/50" />
+
+            <div>
+              <span className="text-xs text-gray-500 block mb-1">Trend Strength (ADX)</span>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-base font-bold text-white">{trend.adx ? trend.adx.toFixed(1) : "N/A"}</span>
+                <span className="text-[9px] text-gray-400 font-semibold">
+                  {trend.strength || "N/A"}
+                </span>
+              </div>
+              <div className="w-full bg-bg-dark border border-border-dark h-1.5 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-emerald-400 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(100, (trend.adx || 0) * 2.0)}%` }}
+                />
               </div>
             </div>
           </div>

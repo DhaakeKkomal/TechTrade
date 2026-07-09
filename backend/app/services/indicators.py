@@ -42,6 +42,43 @@ class TechnicalIndicators:
         lower_band = sma - (std * num_std)
         return upper_band, sma, lower_band
 
+    @staticmethod
+    def calculate_adx(high: pd.Series, low: pd.Series, close: pd.Series, period: int = 14) -> pd.Series:
+        # True Range
+        tr1 = high - low
+        tr2 = (high - close.shift(1)).abs()
+        tr3 = (low - close.shift(1)).abs()
+        tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+        
+        # Smoothed True Range (Wilder's smoothing)
+        smoothed_tr = tr.ewm(alpha=1/period, adjust=False).mean()
+        
+        # Directional Movement (+DM and -DM)
+        up_move = high.diff()
+        down_move = low.shift(1) - low
+        
+        pos_dm = np.where((up_move > down_move) & (up_move > 0), up_move, 0.0)
+        neg_dm = np.where((down_move > up_move) & (down_move > 0), down_move, 0.0)
+        
+        pos_dm = pd.Series(pos_dm, index=high.index)
+        neg_dm = pd.Series(neg_dm, index=high.index)
+        
+        # Smoothed Directional Movement
+        smoothed_pos_dm = pos_dm.ewm(alpha=1/period, adjust=False).mean()
+        smoothed_neg_dm = neg_dm.ewm(alpha=1/period, adjust=False).mean()
+        
+        # Directional Indexes (+DI and -DI)
+        pos_di = 100 * (smoothed_pos_dm / smoothed_tr.replace(0, np.nan))
+        neg_di = 100 * (smoothed_neg_dm / smoothed_tr.replace(0, np.nan))
+        
+        # Directional Index (DX)
+        dx = 100 * (pos_di - neg_di).abs() / (pos_di + neg_di).replace(0, np.nan)
+        
+        # Average Directional Index (ADX)
+        adx = dx.ewm(alpha=1/period, adjust=False).mean()
+        
+        return adx.fillna(0)
+
     @classmethod
     def analyze_all(cls, df: pd.DataFrame) -> Dict[str, Any]:
         """
@@ -73,7 +110,6 @@ class TechnicalIndicators:
         prev_price = float(close.iloc[-2]) if len(close) > 1 else current_price
         
         # Support and Resistance Peak/Valley Detection
-        # Let's find local extrema within a rolling window of 10 periods
         sr_window = 10
         support_levels = []
         resistance_levels = []
@@ -117,6 +153,19 @@ class TechnicalIndicators:
                 trend = "Weak Bearish"
                 trend_score = -0.3
         
+        # Calculate ADX Trend Strength
+        adx = cls.calculate_adx(high, low, close, 14)
+        latest_adx = float(adx.iloc[-1])
+        
+        if latest_adx < 20:
+            trend_strength_desc = "Weak or No Trend"
+        elif latest_adx < 25:
+            trend_strength_desc = "Developing Trend"
+        elif latest_adx < 50:
+            trend_strength_desc = "Strong Trend"
+        else:
+            trend_strength_desc = "Very Strong Trend"
+
         # Volume Analysis
         vol_sma20 = volume.rolling(window=20).mean()
         latest_vol = float(volume.iloc[-1])
@@ -137,6 +186,103 @@ class TechnicalIndicators:
                 volume_signal = "Bullish Accumulation"
             else:
                 volume_signal = "Bearish Distribution"
+
+        # Confidence Score calculation (0 to 100)
+        # Based on indicator alignment
+        score_components = []
+        
+        # 1. Trend alignment: 30% weight
+        if trend == "Bullish":
+            trend_score_calc = 30.0
+            if current_price < latest_sma50:
+                trend_score_calc -= 10.0 # deduct if price falls below SMA50 despite primary bullish trend
+        elif trend == "Bearish":
+            trend_score_calc = 30.0
+            if current_price > latest_sma50:
+                trend_score_calc -= 10.0
+        elif trend in ["Weak Bullish", "Weak Bearish"]:
+            trend_score_calc = 15.0
+        else: # Sideways
+            trend_score_calc = 10.0
+        score_components.append(max(0.0, trend_score_calc))
+        
+        # 2. RSI alignment with trend: 20% weight
+        rsi_val = float(rsi.iloc[-1])
+        rsi_score = 10.0  # Base RSI score
+        if "Bullish" in trend:
+            if 40 <= rsi_val <= 68:
+                rsi_score = 20.0  # Strong momentum, not overbought yet
+            elif rsi_val > 68:
+                rsi_score = 8.0   # Overbought risk of reversal
+            elif rsi_val < 40:
+                rsi_score = 0.0   # Divergent momentum
+        elif "Bearish" in trend:
+            if 32 <= rsi_val <= 60:
+                rsi_score = 20.0  # Strong downward momentum
+            elif rsi_val < 32:
+                rsi_score = 8.0   # Oversold risk of rebound
+            elif rsi_val > 60:
+                rsi_score = 0.0   # Divergent momentum
+        else: # Sideways
+            if 40 <= rsi_val <= 60:
+                rsi_score = 20.0  # Stable neutral RSI is good for range trading
+            else:
+                rsi_score = 10.0
+        score_components.append(rsi_score)
+        
+        # 3. MACD alignment with trend: 20% weight
+        is_macd_bullish = macd_line.iloc[-1] > macd_signal.iloc[-1]
+        macd_score = 10.0 # Base MACD score
+        if "Bullish" in trend:
+            macd_score = 20.0 if is_macd_bullish else 5.0
+        elif "Bearish" in trend:
+            macd_score = 20.0 if not is_macd_bullish else 5.0
+        else: # Sideways
+            macd_score = 10.0
+        score_components.append(macd_score)
+        
+        # 4. Bollinger Bands position: 15% weight
+        bb_upper_val = bb_upper.iloc[-1]
+        bb_lower_val = bb_lower.iloc[-1]
+        bb_width = bb_upper_val - bb_lower_val
+        bb_percent = (current_price - bb_lower_val) / bb_width if bb_width > 0 else 0.5
+        
+        bb_score = 5.0
+        if "Bullish" in trend:
+            if 0.5 <= bb_percent <= 0.95:
+                bb_score = 15.0  # Riding upper band cleanly
+            elif bb_percent > 0.95:
+                bb_score = 10.0  # Extended, close to upper band break
+        elif "Bearish" in trend:
+            if 0.05 <= bb_percent <= 0.5:
+                bb_score = 15.0  # Riding lower band cleanly
+            elif bb_percent < 0.05:
+                bb_score = 10.0  # Extended, close to lower band break
+        else: # Sideways
+            if 0.2 <= bb_percent <= 0.8:
+                bb_score = 15.0  # Safely within bounds
+        score_components.append(bb_score)
+        
+        # 5. Volume Confirmation: 15% weight
+        vol_score = 5.0
+        if volume_signal in ["Bullish Accumulation", "Bearish Distribution"]:
+            vol_score = 15.0 # Supported by volume spike
+        elif volume_status == "Normal":
+            vol_score = 10.0
+        score_components.append(vol_score)
+        
+        # Total sum of components (max 100)
+        confidence_score = sum(score_components)
+        confidence_score = min(100.0, max(0.0, confidence_score))
+        
+        if confidence_score < 45:
+            confidence_rating = "Low"
+        elif confidence_score < 70:
+            confidence_rating = "Medium"
+        elif confidence_score < 85:
+            confidence_rating = "High"
+        else:
+            confidence_rating = "Strong"
 
         return {
             "current_price": current_price,
@@ -170,7 +316,13 @@ class TechnicalIndicators:
             },
             "trend": {
                 "direction": trend,
-                "score": trend_score
+                "score": trend_score,
+                "adx": latest_adx,
+                "strength": trend_strength_desc
+            },
+            "confidence": {
+                "score": confidence_score,
+                "rating": confidence_rating
             },
             "support_resistance": {
                 "supports": [round(x, 2) for x in support_levels],

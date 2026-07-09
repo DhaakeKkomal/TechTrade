@@ -1,7 +1,8 @@
-import React from "react";
+import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import SearchBar from "../components/SearchBar";
 import WatchlistManager from "../components/WatchlistManager";
+import ScreenshotAnalyzer from "../components/ScreenshotAnalyzer";
 import { useAuthStore } from "../store/authStore";
 import { Sparkles, Calendar, BookOpen } from "lucide-react";
 
@@ -53,9 +54,48 @@ export default function Dashboard() {
           <SearchBar />
         </div>
 
+        {/* Trending Stocks Section */}
+        <div className="space-y-4">
+          <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Trending Market Tickers</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            {[
+              { symbol: "AAPL", name: "Apple Inc.", exchange: "NASDAQ" },
+              { symbol: "TSLA", name: "Tesla Inc.", exchange: "NASDAQ" },
+              { symbol: "NVDA", name: "NVIDIA Corp.", exchange: "NASDAQ" },
+              { symbol: "RELIANCE.NS", name: "Reliance Industries", exchange: "NSE" },
+              { symbol: "INFY.NS", name: "Infosys Limited", exchange: "NSE" },
+              { symbol: "TCS.NS", name: "TCS Limited", exchange: "NSE" },
+            ].map((stock) => (
+              <Link
+                key={stock.symbol}
+                to={`/stocks/${stock.symbol}`}
+                className="bg-card-dark border border-border-dark hover:border-emerald-500/30 p-4 rounded-2xl flex flex-col justify-between gap-3 hover:scale-102 hover:shadow-lg hover:shadow-black/10 transition-all duration-300 group cursor-pointer"
+              >
+                <div>
+                  <span className="block font-bold text-xs text-white group-hover:text-emerald-400 transition-colors duration-200">{stock.symbol}</span>
+                  <span className="block text-[9px] text-gray-500 truncate mt-0.5">{stock.name}</span>
+                </div>
+                <div className="flex items-center justify-between text-[8px] font-bold mt-2">
+                  <span className="bg-bg-dark text-gray-400 border border-border-dark px-1.5 py-0.5 rounded">
+                    {stock.exchange}
+                  </span>
+                  <span className="text-emerald-400 group-hover:translate-x-0.5 transition-transform duration-200">
+                    Analyze &rarr;
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+
         {/* Watchlist Section */}
         <div>
           <WatchlistManager />
+        </div>
+
+        {/* AI Screenshot Analyzer Section */}
+        <div>
+          <ScreenshotAnalyzer />
         </div>
 
         {/* Educational Disclaimer Footer */}

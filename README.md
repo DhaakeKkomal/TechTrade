@@ -1,6 +1,6 @@
 # TechTrade — Enterprise AI Stock Market Analysis Platform
 
-TechTrade is a production-ready, enterprise-grade AI Stock Market Analysis Platform built using free and open-source technologies.
+TechTrade is a production-ready, enterprise-grade AI Stock Market Analysis Platform built using free and open-source technologies. It features clean architecture, reusable components, and is designed to scale modularly so that future modules can be added seamlessly.
 
 ---
 
@@ -15,13 +15,13 @@ TechTrade is a production-ready, enterprise-grade AI Stock Market Analysis Platf
 - **Core**: React 19, TypeScript, Vite
 - **Styling**: Tailwind CSS (v4)
 - **State Management**: Zustand
-- **Data Fetching**: TanStack Query
-- **Charting**: TradingView Lightweight Charts
+- **Data Fetching**: Fetch API with clean abstraction
+- **Charting**: TradingView Lightweight Charts (custom candlesticks) + TradingView Interactive Widget
 - **Icons**: Lucide React
 
 ### Backend
 - **Core**: FastAPI (Python 3.12)
-- **Database**: SQLite (default for local convenience, fully swappable to PostgreSQL via `DATABASE_URL`)
+- **Database**: PostgreSQL (for containerized Docker setups) or SQLite (for local out-of-the-box convenience)
 - **ORM**: SQLAlchemy
 - **Authentication**: JWT (JSON Web Tokens) with direct `bcrypt` password encryption
 - **Market Data**: `yfinance` (Yahoo Finance queries)
@@ -45,29 +45,47 @@ TechTrade/
 │   ├── tests/              # Pytest automated test files
 │   ├── requirements.txt    # Python requirements
 │   └── run.py              # Server execution file
-└── frontend/
-    ├── src/
-    │   ├── components/     # Visual elements (Navbar, SearchBar, StockChart, WatchlistManager)
-    │   ├── pages/          # Layout pages (Login, Register, Dashboard, StockDetail)
-    │   ├── store/          # Zustand auth stores
-    │   ├── services/       # Backend API clients
-    │   └── utils/          # Client-side chart calculations
-    ├── index.html          # Entry document
-    └── vite.config.ts      # Vite configuration
+├── frontend/
+│   ├── src/
+│   │   ├── components/     # Visual elements (Navbar, SearchBar, StockChart, WatchlistManager)
+│   │   ├── pages/          # Layout pages (Login, Register, Dashboard, StockDetail)
+│   │   ├── store/          # Zustand auth stores
+│   │   ├── services/       # Backend API clients
+│   │   └── utils/          # Client-side chart calculations
+│   ├── index.html          # Entry document
+│   └── vite.config.ts      # Vite configuration
+├── docker-compose.yml      # Orchestrates all containers
+└── README.md               # Documentation
 ```
 
 ---
 
 ## Installation & Setup
 
-### Prerequisites
-- **Node.js** (v18+)
-- **Python** (v3.12+)
-- **Ollama** (optional, for actual AI summaries): Install [Ollama](https://ollama.com/) locally and run `ollama run mistral` to pull the default model.
+### Option 1: Running with Docker (Recommended)
+
+1. Make sure you have **Docker** and **Docker Compose** installed.
+2. Clone this repository and navigate to the project root:
+   ```bash
+   docker-compose up --build
+   ```
+3. This command will pull and build all three containers:
+   - **Database (PostgreSQL)** running on port `5432`
+   - **Backend (FastAPI)** running on port `8000` (API Docs available at `http://localhost:8000/docs`)
+   - **Frontend (React + Vite)** running on port `5173` (Access interface at `http://localhost:5173`)
+
+*Note: The backend is configured to resolve `host.docker.internal` so it can communicate with a local Ollama server running on your host machine.*
 
 ---
 
-### Step 1: Backend Setup
+### Option 2: Running Locally
+
+#### Prerequisites
+- **Node.js** (v18+)
+- **Python** (v3.11+)
+- **Ollama** (optional, for actual AI summaries): Install [Ollama](https://ollama.com/) locally and run `ollama run mistral` to pull the default model.
+
+#### Step 1: Backend Setup
 1. Open a terminal and navigate to the backend folder:
    ```bash
    cd backend
@@ -75,7 +93,10 @@ TechTrade/
 2. Create and activate a virtual environment:
    ```bash
    python -m venv .venv
+   # Windows:
    .venv\Scripts\activate
+   # macOS/Linux:
+   source .venv/bin/activate
    ```
 3. Install dependencies:
    ```bash
@@ -87,9 +108,7 @@ TechTrade/
    ```
    The API will be available at `http://127.0.0.1:8000`.
 
----
-
-### Step 2: Frontend Setup
+#### Step 2: Frontend Setup
 1. Open a new terminal and navigate to the frontend folder:
    ```bash
    cd frontend
@@ -102,13 +121,55 @@ TechTrade/
    ```bash
    npm run dev
    ```
-   The user interface will be available at the local address printed by Vite (typically `http://localhost:5173`).
+   The user interface will be available at `http://localhost:5173`.
+
+---
+
+## API Documentation
+
+FastAPI provides interactive API docs out-of-the-box. When the backend is running, go to:
+- Swagger UI: [http://localhost:8000/docs](http://localhost:8000/docs)
+- ReDoc: [http://localhost:8000/redoc](http://localhost:8000/redoc)
+
+### Primary Endpoints
+- **Authentication**:
+  - `POST /api/v1/auth/register` - Create user accounts.
+  - `POST /api/v1/auth/login` - Obtain JWT access token.
+- **User Profile**:
+  - `GET /api/v1/users/me` - Read current user profile.
+  - `PUT /api/v1/users/me` - Update full name, password, and preferences.
+- **Stocks & Analysis**:
+  - `GET /api/v1/stocks/search?q={query}` - Autocomplete market search (NSE/BSE/US).
+  - `GET /api/v1/stocks/{symbol}/info` - Retrieve real-time stock details.
+  - `GET /api/v1/stocks/{symbol}/history` - Historical candle OHLCV data.
+  - `GET /api/v1/stocks/{symbol}/analysis` - Compute indicators (SMA, EMA, Bollinger, RSI, MACD, Support & Resistance, ADX Trend Strength, Confidence Score).
+  - `GET /api/v1/stocks/{symbol}/ai-summary` - Local LLM outlook.
+- **Watchlists**:
+  - `GET/POST /api/v1/watchlists` - Get or create user watchlists.
+  - `POST/DELETE /api/v1/watchlists/{id}/items` - Add or remove symbols from a watchlist.
+
+---
+
+## Future Phase Extensibility (Modular Architecture)
+
+The architecture is designed strictly following **SOLID** principles, keeping data retrieval, indicator logic, and storage decoupled. Here is how future modules can be plugged in without refactoring core code:
+
+1. **AI & ML Modules**:
+   - Create a service class under `backend/app/services/ml_service.py` for training models or running inference.
+   - Register endpoints in a new file `backend/app/api/predictions.py` and include them in the router `backend/app/api/__init__.py`.
+2. **Scanner & Alerts Module**:
+   - Add a worker service `backend/app/services/alert_service.py` using standard background task schedulers.
+   - Define a SQLAlchemy model `backend/app/models/alert.py` inheriting from `Base` to store thresholds.
+3. **Sentiment Analysis**:
+   - Extend the yfinance parser or use a news API service. Plug the results directly into the `OllamaService` context to incorporate news sentiment into the technical summary output.
+4. **Backtesting Engine**:
+   - Write a standalone engine inside `backend/app/services/backtester.py`. It imports `TechnicalIndicators` to generate hypothetical buy/sell signals on historical pandas DataFrames, keeping calculations completely unified.
 
 ---
 
 ## Testing Guide
 
-Automated unit tests cover JWT token creation, duplicate email signup protections, moving averages math (SMA, EMA), oscillators (RSI), price bands (Bollinger), and Support/Resistance extrema.
+Automated unit tests cover JWT token creation, duplicate email signup protections, moving averages math (SMA, EMA), oscillators (RSI), price bands (Bollinger), Support/Resistance extrema, ADX trend strength, and confidence score bounds.
 
 To execute tests:
 1. Navigate to the `backend/` folder and activate the virtual environment.

@@ -1,0 +1,40 @@
+# Python virtual environments
+.venv/
+venv/
+env/
+.myenv/
+ENV/
+*.venv
+backend/.venv/
+backend/venv/
+
+# Python caching & builds
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+
+# Node.js dependencies & builds
+node_modules/
+dist/
+build/
+.npm
+*.log
+
+# Local Databases
+*.db
+*.sqlite
+techtrade.db
+test.db
+backend/techtrade.db
+backend/test.db
+
+# IDE & system configurations
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
