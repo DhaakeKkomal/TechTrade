@@ -45,6 +45,33 @@ export default function Navbar() {
 
           <div className="h-4 w-[1px] bg-border-dark" />
 
+          <Link
+            to="/journal"
+            className="text-xs text-gray-300 hover:text-emerald-400 font-bold uppercase transition-colors duration-200"
+          >
+            Journal
+          </Link>
+
+          <div className="h-4 w-[1px] bg-border-dark" />
+
+          <Link
+            to="/sentiment"
+            className="text-xs text-gray-300 hover:text-emerald-400 font-bold uppercase transition-colors duration-200"
+          >
+            Sentiment
+          </Link>
+
+          <div className="h-4 w-[1px] bg-border-dark" />
+
+          <Link
+            to="/backtest"
+            className="text-xs text-gray-300 hover:text-emerald-400 font-bold uppercase transition-colors duration-200"
+          >
+            Backtest
+          </Link>
+
+          <div className="h-4 w-[1px] bg-border-dark" />
+
           <div className="flex items-center gap-3">
             <Link
               to="/profile"

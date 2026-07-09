@@ -13,3 +13,4 @@ class User(Base):
 
     # Relationships
     watchlists = relationship("Watchlist", back_populates="owner", cascade="all, delete-orphan")
+    trades = relationship("Trade", back_populates="owner", cascade="all, delete-orphan")

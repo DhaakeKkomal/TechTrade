@@ -159,4 +159,105 @@ export const api = {
       });
     },
   },
+  journal: {
+    getTrades: async () => {
+      return request<any[]>("/journal/trades");
+    },
+    createTrade: async (formData: FormData) => {
+      const activeToken = localStorage.getItem("token");
+      const headers: HeadersInit = {};
+      if (activeToken) {
+        headers["Authorization"] = `Bearer ${activeToken}`;
+      }
+      const response = await fetch(`${API_BASE_URL}/journal/trades`, {
+        method: "POST",
+        headers,
+        body: formData,
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || "Failed to create trade entry");
+      }
+      return data;
+    },
+    updateTrade: async (id: number, data: any) => {
+      return request<any>(`/journal/trades/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      });
+    },
+    deleteTrade: async (id: number) => {
+      return request<any>(`/journal/trades/${id}`, {
+        method: "DELETE",
+      });
+    },
+    getStats: async () => {
+      return request<any>("/journal/stats");
+    },
+    getMonthlyReport: async (year?: number, month?: number) => {
+      let url = "/journal/report";
+      if (year && month) {
+        url += `?year=${year}&month=${month}`;
+      }
+      return request<any>(url);
+    },
+    getTradeAiFeedback: async (id: number) => {
+      return request<any>(`/journal/trades/${id}/ai-coach`);
+    },
+  },
+  sentiment: {
+    getMarketMood: async (symbol?: string) => {
+      let url = "/sentiment/market";
+      if (symbol) {
+        url += `?symbol=${symbol}`;
+      }
+      return request<any>(url);
+    },
+    getSectors: async () => {
+      return request<any[]>("/sentiment/sectors");
+    },
+    getNews: async (symbol?: string) => {
+      let url = "/sentiment/news";
+      if (symbol) {
+        url += `?symbol=${symbol}`;
+      }
+      return request<any[]>(url);
+    },
+    getHistory: async () => {
+      return request<any[]>("/sentiment/history");
+    },
+  },
+  backtest: {
+    run: async (config: any) => {
+      return request<any>("/backtest/run", {
+        method: "POST",
+        body: JSON.stringify(config),
+      });
+    },
+    exportCsv: async (config: any) => {
+      const activeToken = localStorage.getItem("token");
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+      };
+      if (activeToken) {
+        headers["Authorization"] = `Bearer ${activeToken}`;
+      }
+      const response = await fetch(`${API_BASE_URL}/backtest/export`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(config),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to export backtest CSV report");
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `backtest_report_${config.symbol}_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    },
+  },
 };

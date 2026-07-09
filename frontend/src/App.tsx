@@ -7,6 +7,9 @@ import Dashboard from "./pages/Dashboard";
 import StockDetail from "./pages/StockDetail";
 import Profile from "./pages/Profile";
 import Scanner from "./pages/Scanner";
+import Journal from "./pages/Journal";
+import Sentiment from "./pages/Sentiment";
+import Backtest from "./pages/Backtest";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -66,6 +69,30 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Scanner />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/journal"
+          element={
+            <ProtectedRoute>
+              <Journal />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/sentiment"
+          element={
+            <ProtectedRoute>
+              <Sentiment />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/backtest"
+          element={
+            <ProtectedRoute>
+              <Backtest />
             </ProtectedRoute>
           }
         />
